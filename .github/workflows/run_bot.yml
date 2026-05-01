@@ -1,19 +1,14 @@
-name: Run Bale YouTube Downloader
-
-on:
-  workflow_dispatch:
-
+name: Kora-Bale-Bot
+on: [workflow_dispatch]
 jobs:
   run:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+        with: {python-version: '3.11'}
       - run: pip install -r requirements.txt
-      - name: Run bot
-        env:
+      - env:
           BALE_TOKEN: ${{ secrets.BALE_TOKEN }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: python bot.py
