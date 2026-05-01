@@ -1,41 +1,44 @@
-import os, requests, re, subprocess, json, time
+import os, requests, time
 
-TOKEN=os.getenv("BALE_TOKEN")
-BASE="https://tapi.bale.ai/bot"+TOKEN+"/"
+BALE_TOKEN = os.getenv("BALE_TOKEN")
+HF_API_KEY = os.getenv("HF_API_KEY")
+BASE = f"https://tapi.bale.ai/bot{BALE_TOKEN}/"
+CHAT_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+IMG_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1"
+HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"}
+PROMPT = "You are Kora, an intelligent assistant. "
+
+def send_req(method, data, files=None):
+    return requests.post(BASE + method, data=data, files=files, json=data if not files else None)
 
 def get_updates(offset=None):
-    r=requests.get(BASE+"getUpdates",params={"offset":offset})
-    return r.json()["result"]
+    r = requests.get(BASE + "getUpdates", params={"offset": offset})
+    return r.json().get("result", [])
 
-def send_message(chat_id,text):
-    requests.post(BASE+"sendMessage",json={"chat_id":chat_id,"text":text})
+def chat(text):
+    r = requests.post(CHAT_URL, headers=HEADERS, json={"inputs": f"{PROMPT} {text}"})
+    return r.json()[0]["generated_text"].split("[/INST]")[-1]
 
-def send_video(chat_id,path):
-    files={"video":open(path,"rb")}
-    requests.post(BASE+"sendVideo",data={"chat_id":chat_id},files=files)
-
-def download_youtube(url,output):
-    subprocess.run(["yt-dlp","-f","best","-o",output,url],check=True)
+def gen_img(text):
+    r = requests.post(IMG_URL, headers=HEADERS, json={"inputs": text})
+    return r.content
 
 def run():
-    last=None
+    offset = None
     while True:
-        updates=get_updates(last)
+        updates = get_updates(offset)
         for u in updates:
-            last=u["update_id"]+1
-            msg=u.get("message",{})
-            cid=msg.get("chat",{}).get("id")
-            text=msg.get("text","")
-            if re.match(r'^https?://(www\.)?youtube\.com|youtu\.be',text):
-                send_message(cid,"دانلود در حال انجامه...")
-                try:
-                    output="/tmp/video.mp4"
-                    download_youtube(text,output)
-                    send_video(cid,output)
-                    send_message(cid,"تمام شد ✅")
-                except Exception as e:
-                    send_message(cid,str(e))
-        time.sleep(3)
+            offset = u["update_id"] + 1
+            cid = u["message"]["chat"]["id"]
+            txt = u["message"].get("text", "")
+            if txt == "/start":
+                send_req("sendMessage", {"chat_id": cid, "text": "کورا بارگذاری شد. سوال خود را بپرسید."})
+            elif txt.startswith("/img "):
+                img = gen_img(txt[5:])
+                send_req("sendPhoto", {"chat_id": cid}, files={"photo": ("img.png", img)})
+            else:
+                send_req("sendMessage", {"chat_id": cid, "text": chat(txt)})
+        time.sleep(2)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     run()
