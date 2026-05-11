@@ -1,92 +1,10 @@
-name: 4-Browse the Web
-
-on:
-  workflow_dispatch:
-    inputs:
-      url:
-        description: 'URL to visit'
-        required: true
-        type: string
-
-jobs:
-  browse:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl zip socat
-
-      - name: Setup Node
-        run: |
-          npm init -y
-          npm install puppeteer http-proxy
-
-      - name: Create proxy script
-        run: |
-          cat > proxy.js << 'EOF'
-          const http = require('http');
-          const httpProxy = require('http-proxy');
-          const url = require('url');
-
-          const target = process.argv[2];
-          const proxy = httpProxy.createProxyServer({ target, changeOrigin: true, selfHandleResponse: false });
-
-          const server = http.createServer((req, res) => {
-            proxy.web(req, res, {}, e => {
-              res.writeHead(502, {'Content-Type':'text/plain'});
-              res.end('Proxy error: ' + e.message);
-            });
-          });
-
-          server.listen(8080);
-          console.log('Proxy server running on http://localhost:8080 forwarding to', target);
-          EOF
-
-      - name: Start Proxy Server in background
-        run: |
-          url="${{ github.event.inputs.url }}"
-          if [[ ! "$url" =~ ^https?:// ]]; then
-            url="https://$url"
-          fi
-          node proxy.js "$url" &
-          echo $! > proxy.pid
-          sleep 5
-
-      - name: Test proxy
-        run: |
-          curl -x http://localhost:8080 -L http://localhost:8080
-
-      - name: Create Checker script
-        run: |
-          cat > checker.js << 'EOJ'
-          const http = require('http');
-          const req = http.request({host:'localhost', port:8080, path:'/', method:'GET'}, res => {
-            console.log('Proxy status:', res.statusCode);
-            process.exit(res.statusCode === 200 ? 0 : 1);
-          });
-          req.on('error', e => {
-            console.error('Error:', e.message);
-            process.exit(1);
-          });
-          req.end();
-          EOJ
-
-      - name: Check proxy running
-        run: node checker.js
-
-      - name: Kill Proxy
-        run: kill $(cat proxy.pid)
-
-      - name: Commit (empty, just to align workflow)
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git commit --allow-empty -m "Started proxy for ${{ github.event.inputs.url }}" || true
-          git push
+title: 'Xxx video  live '
+description: 'Xxx video live '
+steps:
+  - course: githubtraining/introduction-to-github
+    description: The first step in your course
+  - link: 'https://lab.github.com'
+    title: Check out Learning Lab for more courses!
+    description: >-
+      There are many more courses available on Learning Lab for you to check
+      out.
