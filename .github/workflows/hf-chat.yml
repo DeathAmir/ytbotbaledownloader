@@ -5,12 +5,18 @@ on:
     inputs:
       prompt:
         required: true
+      request_id:
+        required: true
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: install
         run: pip install huggingface_hub
 
@@ -18,7 +24,9 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           PROMPT: ${{ github.event.inputs.prompt }}
+          REQUEST_ID: ${{ github.event.inputs.request_id }}
         run: |
+          mkdir -p responses
           python <<EOF
           from huggingface_hub import InferenceClient
           import os
@@ -32,12 +40,15 @@ jobs:
 
           text = completion.choices[0].message.content
 
-          with open("response.txt","w",encoding="utf-8") as f:
+          path = f"responses/{os.environ['REQUEST_ID']}.txt"
+          with open(path, "w", encoding="utf-8") as f:
               f.write(text)
           EOF
 
-      - name: upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ai-response
-          path: response.txt
+      - name: commit response
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add responses/
+          git commit -m "Add AI response" || echo "nothing to commit"
+          git push
