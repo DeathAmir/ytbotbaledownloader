@@ -4,9 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       prompt:
-        description: "Your message"
         required: true
-        default: "What is the capital of France?"
 
 jobs:
   chat:
@@ -31,13 +29,10 @@ jobs:
 
           completion = client.chat.completions.create(
               model="Qwen/Qwen2.5-7B-Instruct:together",
-              messages=[
-                  {
-                      "role": "user",
-                      "content": os.environ["PROMPT"]
-                  }
-              ],
+              messages=[{"role":"user","content":os.environ["PROMPT"]}],
           )
 
+          print("###AI_START###")
           print(completion.choices[0].message.content)
+          print("###AI_END###")
           PY
