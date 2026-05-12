@@ -1,0 +1,23 @@
+البته، من یه کد پایتونی می‌نویسم که یه فایل زیپ ایجاد کنه و توی اون فایل `main.lua` باشه که حاوی متن `print("eelo")` باشه. بعد هم این فایل رو برایت آماده می‌کنم. دقت کن که این فایل زیپ در پوشه `/mnt/uploads/` ذخیره می‌شه تا بتونی به راحتی دسترسی داشته باشی. 🚀✨
+
+<code_interpreter type="code" lang="python">
+import os
+import zipfile
+
+# مسیر ذخیره فایل زیپ
+zip_filename = '/mnt/uploads/main.zip'
+
+# محتوای فایل Lua
+lua_content = 'print("eelo")'
+
+# ایجاد فایل Lua
+with open('/mnt/uploads/main.lua', 'w') as lua_file:
+    lua_file.write(lua_content)
+
+# ایجاد فایل زیپ و اضافه کردن فایل Lua به داخلش
+with zipfile.ZipFile(zip_filename, 'w') as zipf:
+    zipf.write('/mnt/uploads/main.lua', 'main.lua')
+
+# چک کردن فایل‌ها در پوشه uploads
+os.listdir('/mnt/uploads')
+</code_interpreter>
