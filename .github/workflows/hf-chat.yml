@@ -1,4 +1,4 @@
-name: hf-image
+name: hf-chat
 
 on:
   workflow_dispatch:
@@ -18,37 +18,45 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: install
-        run: pip install huggingface_hub pillow
+        run: pip install huggingface_hub
 
-      - name: run ai image
+      - name: run ai
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           PROMPT: ${{ github.event.inputs.prompt }}
           REQUEST_ID: ${{ github.event.inputs.request_id }}
         run: |
-          mkdir -p images
+          mkdir -p responses
           python <<EOF
           from huggingface_hub import InferenceClient
           import os
 
           client = InferenceClient(
-              provider="fal-ai",
-              token=os.environ["HF_TOKEN"],
+              model="Qwen/Qwen2.5-7B-Instruct:together",
+              token=os.environ["HF_TOKEN"]
           )
 
-          image = client.text_to_image(
-              os.environ["PROMPT"],
-              model="Tongyi-MAI/Z-Image-Turbo",
+          completion = client.chat.completions.create(
+              messages=[
+                  {
+                      "role":"user",
+                      "content":os.environ["PROMPT"]
+                  }
+              ]
           )
 
-          path = f"images/{os.environ['REQUEST_ID']}.png"
-          image.save(path)
+          text = completion.choices[0].message.content
+
+          path = f"responses/{os.environ['REQUEST_ID']}.txt"
+
+          with open(path,"w",encoding="utf-8") as f:
+              f.write(text)
           EOF
 
-      - name: commit response image
+      - name: commit response
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add images/
-          git commit -m "Add AI generated image" || echo "nothing to commit"
+          git add responses/
+          git commit -m "Add AI response" || echo "nothing to commit"
           git push
