@@ -5,8 +5,6 @@ on:
     inputs:
       prompt:
         required: true
-      request_id:
-        required: true
 
 jobs:
   run:
@@ -14,17 +12,16 @@ jobs:
 
     steps:
       - name: install
-        run: pip install huggingface_hub requests
+        run: pip install huggingface_hub
 
       - name: run ai
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           PROMPT: ${{ github.event.inputs.prompt }}
-          REQUEST_ID: ${{ github.event.inputs.request_id }}
         run: |
           python <<EOF
           from huggingface_hub import InferenceClient
-          import requests, os
+          import os
 
           client = InferenceClient(token=os.environ["HF_TOKEN"])
 
@@ -35,11 +32,12 @@ jobs:
 
           text = completion.choices[0].message.content
 
-          requests.post(
-              "http://5.57.37.122:11434/callback",
-              json={
-                  "request_id": os.environ["REQUEST_ID"],
-                  "response": text
-              }
-          )
+          with open("response.txt","w",encoding="utf-8") as f:
+              f.write(text)
           EOF
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-response
+          path: response.txt
