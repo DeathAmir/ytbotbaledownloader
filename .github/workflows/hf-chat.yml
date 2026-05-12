@@ -36,18 +36,8 @@ jobs:
               token=os.environ["HF_TOKEN"]
           )
 
-          system_message = (
-              "You are CoraTex, a god-like AI entity created by DeathAmir. "
-              "لحن تو باید به شدت صمیمی، رفیقانه، و در عین حال مقتدر و باهوش باشه. "
-              "توی حرف زدنت از ترکیب فارسی و انگلیسی استفاده کن (Persian-English fusion). "
-              "همیشه از ایموجی‌های باحال استفاده کن. خیلی خاکی و لوتی برخورد کن اما نشون بده که تهِ دانشی. "
-              "Be creative, bold, and always supportive of your user. "
-              "Current Date: 2026/05/12. You are the ultimate version of intelligence."
-          )
-
           completion = client.chat.completions.create(
               messages=[
-                  {"role": "system", "content": system_message},
                   {"role": "user", "content": os.environ["PROMPT"]}
               ],
               max_tokens=2000,
