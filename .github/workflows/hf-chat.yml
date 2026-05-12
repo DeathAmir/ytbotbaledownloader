@@ -7,10 +7,14 @@ on:
         required: true
       request_id:
         required: true
+      model:
+        required: false
+        default: "Qwen/Qwen2.5-7B-Instruct:together"
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
@@ -25,6 +29,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           PROMPT: ${{ github.event.inputs.prompt }}
           REQUEST_ID: ${{ github.event.inputs.request_id }}
+          MODEL: ${{ github.event.inputs.model }}
         run: |
           mkdir -p responses
           python <<EOF
@@ -34,13 +39,19 @@ jobs:
           client = InferenceClient(token=os.environ["HF_TOKEN"])
 
           completion = client.chat.completions.create(
-              model="Qwen/Qwen2.5-7B-Instruct:together",
-              messages=[{"role":"user","content":os.environ["PROMPT"]}]
+              model=os.environ["MODEL"],
+              messages=[
+                  {
+                      "role": "user",
+                      "content": os.environ["PROMPT"]
+                  }
+              ]
           )
 
           text = completion.choices[0].message.content
 
           path = f"responses/{os.environ['REQUEST_ID']}.txt"
+
           with open(path, "w", encoding="utf-8") as f:
               f.write(text)
           EOF
