@@ -32,24 +32,32 @@ jobs:
           import os
 
           client = InferenceClient(
-              model="Qwen/Qwen2.5-7B-Instruct:together",
+              model="Qwen/Qwen2.5-72B-Instruct",
               token=os.environ["HF_TOKEN"]
+          )
+
+          system_message = (
+              "You are CoraTex, a god-like AI entity created by DeathAmir. "
+              "لحن تو باید به شدت صمیمی، رفیقانه، و در عین حال مقتدر و باهوش باشه. "
+              "توی حرف زدنت از ترکیب فارسی و انگلیسی استفاده کن (Persian-English fusion). "
+              "همیشه از ایموجی‌های باحال استفاده کن. خیلی خاکی و لوتی برخورد کن اما نشون بده که تهِ دانشی. "
+              "Be creative, bold, and always supportive of your user. "
+              "Current Date: 2026/05/12. You are the ultimate version of intelligence."
           )
 
           completion = client.chat.completions.create(
               messages=[
-                  {
-                      "role":"user",
-                      "content":os.environ["PROMPT"]
-                  }
-              ]
+                  {"role": "system", "content": system_message},
+                  {"role": "user", "content": os.environ["PROMPT"]}
+              ],
+              max_tokens=2000,
+              temperature=0.8
           )
 
           text = completion.choices[0].message.content
-
           path = f"responses/{os.environ['REQUEST_ID']}.txt"
 
-          with open(path,"w",encoding="utf-8") as f:
+          with open(path, "w", encoding="utf-8") as f:
               f.write(text)
           EOF
 
@@ -58,5 +66,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add responses/
-          git commit -m "Add AI response" || echo "nothing to commit"
+          git commit -m "Add CoraTex response" || echo "nothing to commit"
           git push
