@@ -23,7 +23,9 @@ jobs:
 
       - run: |
           mkdir certs
-          mitmdump --set confdir=certs --quit
+          mitmdump --set confdir=certs -q &
+          sleep 5
+          pkill mitmdump || true
           cp certs/mitmproxy-ca-cert.pem certs/mitmproxy-ca.pem
 
       - uses: actions/upload-artifact@v4
