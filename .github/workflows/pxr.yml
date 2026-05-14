@@ -1,0 +1,17 @@
+name: Proxy Runner
+on:
+  workflow_dispatch:
+    inputs:
+      allowed_hosts:
+        required: true
+jobs:
+  proxy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - run: pip install mitmproxy
+      - run: |
+          ALLOWED_HOSTS=${{ github.event.inputs.allowed_hosts }}
+          mitmproxy --mode transparent --listen-port 8089 --set block_global=false --set ssl_insecure=false --set stream_large_bodies=1 --set filter='~m ^http(s)?://('$(echo $ALLOWED_HOSTS | sed 's/,/|/g')')'
