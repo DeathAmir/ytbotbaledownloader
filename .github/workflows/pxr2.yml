@@ -3,11 +3,16 @@ name: pxr2
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   cert:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
@@ -23,7 +28,13 @@ jobs:
           pkill mitmdump || true
           cp ca/mitmproxy-ca-cert.pem ca/mitmproxy-ca.pem
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ca
-          path: ca/
+      - run: |
+          mkdir -p store
+          cp ca/mitmproxy-ca.pem store/mitmproxy-ca.pem
+
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add store/mitmproxy-ca.pem
+          git commit -m update || true
+          git push
