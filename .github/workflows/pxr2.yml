@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  certs:
+  cert:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,13 +17,13 @@ jobs:
           pip install mitmproxy cryptography>=41.0.0 h2>=4.1.0 brotli>=1.1.0 zstandard>=0.22.0
 
       - run: |
-          mkdir certs
-          mitmdump --set confdir=certs -q &
+          mkdir ca
+          mitmdump --set confdir=ca -q &
           sleep 5
           pkill mitmdump || true
-          cp certs/mitmproxy-ca-cert.pem certs/mitmproxy-ca.pem
+          cp ca/mitmproxy-ca-cert.pem ca/mitmproxy-ca.pem
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mitmproxy-certs
-          path: certs/
+          name: ca
+          path: ca/
