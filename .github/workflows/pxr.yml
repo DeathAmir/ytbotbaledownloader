@@ -6,13 +6,18 @@ on:
       allowed_hosts:
         required: true
         type: string
+      port:
+        required: true
+        type: string
 
 jobs:
   proxy:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 360
 
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
@@ -23,11 +28,11 @@ jobs:
 
       - run: |
           mkdir ca
-          mitmdump --set confdir=ca -q &
-          sleep 5
-          pkill mitmdump || true
+          cp store/mitmproxy-ca.pem ca/mitmproxy-ca.pem
 
       - run: |
           echo "${{ github.event.inputs.allowed_hosts }}" > hosts.txt
-          nohup mitmdump --listen-host 0.0.0.0 --listen-port 8089 --set confdir=ca > proxy.log 2>&1 &
-          sleep 18000
+
+      - run: |
+          nohup mitmdump --listen-host 0.0.0.0 --listen-port ${{ github.event.inputs.port }} --set confdir=ca > proxy.log 2>&1 &
+          sleep 21000
